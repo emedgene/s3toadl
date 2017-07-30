@@ -1,0 +1,33 @@
+{
+  "name": "s3-to-adl-data-transfer",
+  "version": "1.0.0",
+  "description": "Move Data from S3 to Azure Data Lake",
+  "main": "index.js",
+  "dependencies": {
+    "async": "^2.5.0",
+    "aws-sdk": "^2.88.0",
+    "azure-arm-datalake-store": "^2.1.0-preview",
+    "fs": "^0.0.1-security",
+    "rimraf": "^2.6.1",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CatalystCode/S3-to-adl-data-transfer.git"
+  },
+  "keywords": [
+    "DataLake",
+    "S3",
+    "Azure"
+  ],
+  "author": "ilanak",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CatalystCode/S3-to-adl-data-transfer/issues"
+  },
+  "homepage": "https://github.com/CatalystCode/S3-to-adl-data-transfer#readme"
+}
