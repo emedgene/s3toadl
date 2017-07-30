@@ -1,6 +1,6 @@
 {
-  "name": "s3-to-adl-data-transfer",
-  "version": "1.0.0",
+  "name": "s3toadl",
+  "version": "0.0.1",
   "description": "Move Data from S3 to Azure Data Lake",
   "main": "index.js",
   "dependencies": {
@@ -25,7 +25,7 @@
     "Azure"
   ],
   "author": "ilanak",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/CatalystCode/S3-to-adl-data-transfer/issues"
   },
