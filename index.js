@@ -1,14 +1,14 @@
 var async = require('async');
 var awsS3Module = require('./awsS3Module');
-var config = require('./config');
 var adlModule = require('./azureDataLakeModule');
 var filesHelper = require('./filesHelper');
 var rimraf = require('rimraf');
+ var winston = require('winston');
 
 function handler() {
   // create temp directory to download files from s3 and upload it to ADL.
   // In the end of the run this directory will be deleted.
-  var dir = filesHelper.createDirIfNotExists(null, null, config.tempLocalFolder);
+  var dir = filesHelper.createDirIfNotExists(null, null, process.env.TEMP_FOLDER);
 
   // get all existing files in S3 bucket
   awsS3Module.listAllObjects(null, function (error, awsObjects) {
@@ -21,7 +21,6 @@ function handler() {
 
     // Iterate over all files in S3
     async.each(awsObjects, function (key, callback) {
-      console.log(key.Key);
 
       // Check if file exists in Azure data lake 
       adlModule.shouldUploadToADL(key).then(shouldUploadFile => {
@@ -39,11 +38,11 @@ function handler() {
       });
     }, function () {
       // After all uploads are completed, delete the temp directory and its sub directories.
-      rimraf(config.tempLocalFolder, (err) => {
+      rimraf(process.env.TEMP_FOLDER, (err) => {
         if (err) {
-          console.log(err);
+          winston.error("Error deleting temp directories" + err);
         }
-        console.log("all done");
+        winston.info("all done");
       });
     })
   })

@@ -1,20 +1,20 @@
 var adlsManagement = require("azure-arm-datalake-store");
-var config = require('./config');
 var filesHelper = require('./filesHelper');
 var fs = require('fs');
 var msrestAzure = require('ms-rest-azure');
+var winston = require('winston');
 
 // Azure configuration
 //user authentication - Change to service principal authentication
-var credentials = new msrestAzure.ApplicationTokenCredentials(config.azureClientId, config.azureDomain, config.azureSecret);
+var credentials = new msrestAzure.ApplicationTokenCredentials(process.env.AZURE_CLIENT_ID, process.env.AZURE_DOMAIN, process.env.AZURE_SECRET);
 var filesystemClient = new adlsManagement.DataLakeStoreFileSystemClient(credentials);
-var accountName = config.azureDataLakeAccountName;
+var accountName = process.env.AZURE_ADL_ACCOUNT_NAME;
 
 // Checks if aws file exists in ADL, or if S3 holds a newer version of file
 exports.shouldUploadToADL = function (awsFile) {
   var fileFullName = awsFile.Key;
   return filesystemClient.fileSystem.getFileStatus(accountName, fileFullName).then(file => {
-    console.log("file: " + fileFullName + " exists in data lake");
+    winston.log('info', "file: %s already exists in data lake", fileFullName);
 
     // If file exist in Azure Data Lake but it's been updated in aws - upload it again
     if (file.fileStatus.modificationTime < awsFile.LastModified.getTime()) {
@@ -23,7 +23,7 @@ exports.shouldUploadToADL = function (awsFile) {
 
     return false;
   }).catch((ex) => {
-    console.log("file: " + fileFullName + " doesn't exists in ADL");
+    winston.log('info', "file: %s doesn't exists in ADL", fileFullName);
     return true;
   });
 }
@@ -32,7 +32,7 @@ exports.shouldUploadToADL = function (awsFile) {
 // Validates that all directories in the file path exists in ADL files system - if not create the missing directories
 exports.uploadFileToAzureDataLake = function (filePath) {
   var directoriesList = filesHelper.getDirectoriesPathArray(filePath);
-  var localFilePath = config.tempLocalFolder + "/" + filePath;
+  var localFilePath = process.env.TEMP_FOLDER + "/" + filePath;
 
   // Create folders in ADL if needed
   return filesystemClient.fileSystem.mkdirs(accountName, directoriesList.join("/")).then(() => {
@@ -45,10 +45,10 @@ exports.uploadFileToAzureDataLake = function (filePath) {
       // Upload file to Azure Data Lake
       filesystemClient.fileSystem.create(accountName, filePath, options, function (err, result, request, response) {
         if (err) {
-          console.log(err);
+          winston.error(err);
           return reject(err);
         } else {
-          console.log('Upload file ' + filePath + ' successfully');
+          winston.log('info', 'Upload file %s successfully', filePath);
 
           // Delete local file
           fs.unlinkSync(localFilePath);

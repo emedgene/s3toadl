@@ -1,16 +1,16 @@
 var AWS = require('aws-sdk');
-var config = require('./config');
-var s3Client = new AWS.S3(config.awsAccess);
 var fs = require('fs');
 var filesHelper = require('./filesHelper');
 var _ = require('underscore');
 
+var awsConfig = { "accessKeyId": process.env.AWS_ACCESS_KEY_ID, "secretAccessKey": process.env.AWS_SECRET_ACCESS_KEY, "region": process.env.AWS_REGION };
+var s3Client = new AWS.S3(awsConfig);
 
 allKeys = [];
 
 // Get a list of all files in S3 bucket - including sub directories
 exports.listAllObjects = function (marker, callback) {
-    s3Client.listObjects({ Bucket: config.bucketName, Marker: marker }, function (error, data) {
+    s3Client.listObjects({ Bucket: process.env.AWS_BUCKET_NAME, Marker: marker }, function (error, data) {
         if (error) {
             return callback(error, allKeys)
         }
@@ -26,15 +26,15 @@ exports.listAllObjects = function (marker, callback) {
 
 // Download file from S3 to local directory
 exports.downloadFileFromS3 = function (awsFile) {
-    var params = { Bucket: config.bucketName, Key: awsFile.Key };
+    var params = { Bucket: process.env.AWS_BUCKET_NAME, Key: awsFile.Key };
     var directoriesList = filesHelper.getDirectoriesPathArray(awsFile.Key);
 
-    var path = config.tempLocalFolder;
+    var path = process.env.TEMP_FOLDER;
     _.each(directoriesList, function (dir) {
         path = filesHelper.createDirIfNotExists(path, dir);
     });
 
-    var file = fs.createWriteStream(config.tempLocalFolder + "/" + awsFile.Key);
+    var file = fs.createWriteStream(process.env.TEMP_FOLDER + "/" + awsFile.Key);
 
     return new Promise((resolve, reject) => {
         s3Client.getObject(params).createReadStream()
