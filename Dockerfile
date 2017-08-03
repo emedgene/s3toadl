@@ -1,4 +1,7 @@
-FROM node:6.11-alpine
+FROM node:8.2.1-alpine
+
+# Create tmp directory
+RUN mkdir -p /tempdir
 
 # Create app directory
 RUN mkdir -p /usr/src/app
@@ -11,4 +14,4 @@ RUN npm install
 # Bundle app source
 COPY . /usr/src/app
 
-CMD [ "node", "./index.js" ]
+CMD [ "node", "./lib/index.js" ]
