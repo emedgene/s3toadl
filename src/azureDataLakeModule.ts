@@ -1,8 +1,8 @@
 import * as adlsManagement from "azure-arm-datalake-store";
 import * as fs from "fs";
 import * as msrestAzure from "ms-rest-azure";
-import * as winston from "winston";
 import * as filesHelper from "./filesHelper";
+import { winston } from "./logger";
 
 export class AzureDataLakeModule {
   private filesystemClient: adlsManagement.DataLakeStoreFileSystemClient;
@@ -60,6 +60,7 @@ export class AzureDataLakeModule {
       };
 
       // Upload file to Azure Data Lake
+      winston.log("info", "Upload file %s started", filePath);
       await this.filesystemClient.fileSystem.create(this.accountName, filePath, options);
       winston.log("info", "Upload file %s successfully", filePath);
 

@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import * as winston from "winston";
+import { winston } from "./logger";
 
 /**
  * Return the names of all the directories in the file path

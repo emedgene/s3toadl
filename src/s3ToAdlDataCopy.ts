@@ -1,7 +1,7 @@
 import * as async from "async";
 import * as parallel from "async-await-parallel";
 import * as rimraf from "rimraf";
-import * as winston from "winston";
+import { winston } from "./logger";
 import { AwsS3Module } from "./awsS3Module";
 import { AzureDataLakeModule } from "./azureDataLakeModule";
 import { createDirIfNotExists, getDirectoriesPathArray } from "./filesHelper";
