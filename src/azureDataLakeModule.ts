@@ -1,6 +1,7 @@
+import * as AWS from "aws-sdk";
 import * as adlsManagement from "azure-arm-datalake-store";
 import * as fs from "fs";
-import * as msrestAzure from "ms-rest-azure";
+import * as path from "path";
 import * as filesHelper from "./filesHelper";
 import { winston } from "./logger";
 
@@ -9,17 +10,10 @@ export class AzureDataLakeModule {
   private accountName: string;
   private tempFolder: string;
 
-  constructor(accountName: string, clientId: string, domain: string, secret: string, tempFolder: string) {
+  constructor(accountName: string, tempFolder: string, fileSystemClient: adlsManagement.DataLakeStoreFileSystemClient) {
     this.accountName = accountName;
     this.tempFolder = tempFolder;
-
-    try {
-      const credentials = new msrestAzure.ApplicationTokenCredentials(clientId, domain, secret);
-      this.filesystemClient = new adlsManagement.DataLakeStoreFileSystemClient(credentials);
-    } catch (ex) {
-      winston.error("error initializing Azure client " + ex);
-      throw ex;
-    }
+    this.filesystemClient = fileSystemClient;
   }
 
   /**
@@ -30,13 +24,13 @@ export class AzureDataLakeModule {
     const fileFullName = awsFile.Key;
     try {
       const file = await this.filesystemClient.fileSystem.getFileStatus(this.accountName, fileFullName);
-      winston.log("info", "file: %s already exists in data lake", fileFullName);
+      winston.verbose(`file: ${fileFullName} already exists in data lake`);
 
       // If file exist in Azure Data Lake but it"s been updated in aws - upload it again
       return file.fileStatus.modificationTime < awsFile.LastModified.getTime();
     }
     catch (ex) {
-      winston.log("info", "file: %s doesn't exists in ADL", fileFullName);
+      winston.verbose(`file: ${fileFullName} doesn't exists in ADL`);
       return true;
     }
   }
@@ -48,7 +42,7 @@ export class AzureDataLakeModule {
    */
   public async uploadFileToAzureDataLake(filePath: string): Promise<void> {
     const directoriesList = filesHelper.getDirectoriesPathArray(filePath);
-    const localFilePath = this.tempFolder + "/" + filePath;
+    const localFilePath = path.join(this.tempFolder, filePath);
 
     try {
       // Create folders in ADL if needed
@@ -60,14 +54,10 @@ export class AzureDataLakeModule {
       };
 
       // Upload file to Azure Data Lake
-      winston.log("info", "Upload file %s started", filePath);
       await this.filesystemClient.fileSystem.create(this.accountName, filePath, options);
-      winston.log("info", "Upload file %s successfully", filePath);
-
-      // Delete local file
-      fs.unlinkSync(localFilePath);
+      winston.info(`Upload file ${filePath} successfully`);
     } catch (ex) {
-      winston.log("error while uploading file to ADL: %s", ex);
+      winston.error(`error while uploading file to ADL: ${ex}`);
       throw ex;
     }
   }

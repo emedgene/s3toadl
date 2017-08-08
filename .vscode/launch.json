@@ -5,10 +5,28 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceRoot}/lib/index.js",
-            "outFiles": ["${workspaceRoot}/lib"],
+            "program": "${workspaceRoot}/lib/src/index.js",
+            "outFiles": [
+                "${workspaceRoot}/lib"
+            ],
             "sourceMaps": true,
             "stopOnEntry": true
+        },
+        {
+            "name": "Run mocha",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "stopOnEntry": false,
+            "args": [
+                "lib/test/**/*.js",
+                "--no-timeouts"
+            ],
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": null,
+            "env": {
+                "NODE_ENV": "testing"
+            }
         }
     ]
 }

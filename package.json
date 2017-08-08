@@ -14,18 +14,24 @@
     "gulp-sourcemaps": "^2.6.0",
     "gulp-tslint": "^8.1.1",
     "gulp-typescript": "^3.2.1",
+    "mock-aws-s3": "^2.5.1",
     "path": "^0.12.7",
     "rimraf": "^2.6.1",
+    "sinon": "^3.0.0",
     "tslint": "^5.5.0",
     "winston": "^2.3.1"
   },
   "devDependencies": {
+    "@types/chai": "^4.0.2",
+    "@types/mocha": "^2.2.41",
     "@types/node": "^8.0.0",
+    "chai": "^4.1.1",
+    "mocha": "^3.5.0",
     "typescript": "^2.4.2"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "tslint src/*.ts -t verbose"
+    "test": "mocha lib/test/**/**.js --reporter spec",
+    "lint": "tslint */*.ts -t verbose"
   },
   "repository": {
     "type": "git",

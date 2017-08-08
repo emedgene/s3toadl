@@ -1,10 +1,13 @@
 import * as async from "async";
 import * as parallel from "async-await-parallel";
-import * as rimraf from "rimraf";
-import { winston } from "./logger";
+import * as AWS from "aws-sdk";
+import * as adlsManagement from "azure-arm-datalake-store";
+import * as msrestAzure from "ms-rest-azure";
+import * as path from "path";
 import { AwsS3Module } from "./awsS3Module";
 import { AzureDataLakeModule } from "./azureDataLakeModule";
-import { createDirIfNotExists, getDirectoriesPathArray } from "./filesHelper";
+import { createDirIfNotExists, deleteFile, deleteFolder, getDirectoriesPathArray } from "./filesHelper";
+import { winston } from "./logger";
 
 export class S3ToAdlDataCopy {
 
@@ -40,18 +43,17 @@ export class S3ToAdlDataCopy {
     this.tempFolder += "/cache";
     createDirIfNotExists(null, null, this.tempFolder);
 
-    const awsModule = new AwsS3Module(this.awsAccessKeyId, this.awsAccessSecretKey, this.awsRegion, this.awsBucketName, this.tempFolder);
-    const adlModule = new AzureDataLakeModule(this.azureAdlAccountName, this.azureClientId, this.azureDomain, this.azureSecret, this.tempFolder);
+    const awsClient = this.initializeAwsClient(this.awsAccessKeyId, this.awsAccessSecretKey, this.awsRegion);
+    const awsModule = new AwsS3Module(this.awsBucketName, this.tempFolder, awsClient);
+
+    const adlClient = this.initializeAdlClient(this.azureClientId, this.azureDomain, this.azureSecret);
+    const adlModule = new AzureDataLakeModule(this.azureAdlAccountName, this.tempFolder, adlClient);
 
     await this.batchIterationOverS3Items(awsModule, adlModule);
 
     // After all uploads are completed, delete the cache directory and its sub directories.
-    rimraf(this.tempFolder, (err) => {
-      if (err) {
-        winston.error("Error deleting temp directories" + err);
-      }
-      winston.info("all done");
-    });
+    deleteFolder(this.tempFolder);
+    winston.info("all done");
   }
 
   /**
@@ -61,13 +63,15 @@ export class S3ToAdlDataCopy {
   public async batchIterationOverS3Items(awsS3Module: AwsS3Module, adlModule: AzureDataLakeModule): Promise<void> {
     let awsObjectsOutput: AWS.S3.ListObjectsOutput;
     let marker = "";
+    let batchNumber = 1;
     do {
+      winston.info(`Starting batch #${batchNumber}`);
       awsObjectsOutput = await awsS3Module.listAllObjects(marker);
 
       if (awsObjectsOutput && awsObjectsOutput.Contents && awsObjectsOutput.Contents.length > 0) {
         let awsObjects = awsObjectsOutput.Contents;
         // Filter out the directories names - aws.listObjects returns all files in the bucket including directories names
-        awsObjects = awsObjects.filter((obj) => !obj.Key.endsWith("/"));
+        awsObjects = awsObjects.filter((obj) => !obj.Key.endsWith("/") && obj.Key.includes("/"));
 
         const promiseArray = awsObjects.map(key => {
           return async () => {
@@ -76,9 +80,10 @@ export class S3ToAdlDataCopy {
                 await awsS3Module.downloadFileFromS3(key);
                 // Upload File if it doesn't exist in ADL or if a new version of the file exists in S3
                 await adlModule.uploadFileToAzureDataLake(key.Key);
+                await deleteFile(path.join(this.tempFolder, key.Key));
               }
             } catch (ex) {
-              winston.log("error", "error was thrown while working on element %s %s", key.Key, ex);
+              winston.error(`error was thrown while working on element ${key.Key} ${ex}`);
               return null;
             }
           };
@@ -86,6 +91,7 @@ export class S3ToAdlDataCopy {
 
         await parallel(promiseArray, this.concurrencyNumber);
         marker = awsObjects[awsObjects.length - 1].Key;
+        batchNumber++;
       }
     } while (awsObjectsOutput.IsTruncated);
   }
@@ -96,8 +102,28 @@ export class S3ToAdlDataCopy {
 
     variablesList.forEach((variable) => {
       if (!process.env[variable]) {
-        throw new Error("Environment Variable " + variable + " is not defined");
+        throw new Error(`Environment Variable ${variable} is not defined`);
       }
     });
+  }
+
+  private initializeAwsClient(accessKeyId: string, secretAccessKey: string, region: string): AWS.S3 {
+    try {
+      const config = { accessKeyId, secretAccessKey, region };
+      return new AWS.S3(config);
+    } catch (ex) {
+      winston.info(`error initializing s3 client: ${ex}`);
+      throw ex;
+    }
+  }
+
+  private initializeAdlClient(clientId: string, domain: string, secret: string): adlsManagement.DataLakeStoreFileSystemClient {
+    try {
+      const credentials = new msrestAzure.ApplicationTokenCredentials(clientId, domain, secret);
+      return new adlsManagement.DataLakeStoreFileSystemClient(credentials);
+    } catch (ex) {
+      winston.error(`error initializing Azure client ${ex}`);
+      throw ex;
+    }
   }
 }

@@ -1,4 +1,6 @@
 import * as fs from "fs";
+import * as path from "path";
+import * as rimraf from "rimraf";
 import { winston } from "./logger";
 
 /**
@@ -14,11 +16,25 @@ export function getDirectoriesPathArray(filePath: string): string[] {
  * Create directory if it not exist.
  * Create it by path and directory name, or by the full path.
  */
-export function createDirIfNotExists(path?: string, dirName?: string, fullFilePath?: string): void {
-    const fullPath = fullFilePath || path + "/" + dirName;
+export function createDirIfNotExists(filePath?: string, dirName?: string, fullFilePath?: string): void {
+    const fullPath = fullFilePath || path.join(filePath, dirName);
 
     if (!fs.existsSync(fullPath)) {
-        winston.log("info", "Creating directory %s", fullPath);
+        winston.info(`Creating directory ${fullPath}`);
         fs.mkdirSync(fullPath);
     }
+}
+
+export function deleteFile(filePath: string) {
+    // Delete local file
+    fs.unlinkSync(filePath);
+    winston.info(`file ${filePath} was deleted from local folder`);
+}
+
+export function deleteFolder(path: string) {
+    rimraf(path, (err) => {
+        if (err) {
+            winston.error(`Error deleting directories ${err}`);
+        }
+    });
 }

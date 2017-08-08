@@ -1,23 +1,18 @@
 import * as AWS from "aws-sdk";
 import * as fs from "fs";
-import * as winston from "winston";
+import * as path from "path";
 import { createDirIfNotExists, getDirectoriesPathArray } from "./filesHelper";
+import { winston } from "./logger";
 
 export class AwsS3Module {
-    private s3Client: AWS.S3;
+    public s3Client: AWS.S3;
     private bucketName: string;
     private tempFolder: string;
 
-    constructor(accessKeyId: string, secretAccessKey: string, region: string, bucketName: string, tempFolder: string) {
+    constructor(bucketName: string, tempFolder: string, s3Client: AWS.S3) {
         this.bucketName = bucketName;
         this.tempFolder = tempFolder;
-        try {
-            const config = { accessKeyId, secretAccessKey, region };
-            this.s3Client = new AWS.S3(config);
-        } catch (ex) {
-            winston.log("error initializing s3 client: " + ex);
-            throw ex;
-        }
+        this.s3Client = s3Client;
     }
 
     /**
@@ -49,14 +44,14 @@ export class AwsS3Module {
         const params = { Bucket: this.bucketName, Key: awsFile.Key };
         const directoriesList = getDirectoriesPathArray(awsFile.Key);
 
-        let path = this.tempFolder;
+        let fullPath = this.tempFolder;
         directoriesList.forEach(dir => {
-            createDirIfNotExists(path, dir);
-            path += "/" + dir;
+            createDirIfNotExists(fullPath, dir);
+            fullPath += "/" + dir;
         });
 
-        const file = fs.createWriteStream(this.tempFolder + "/" + awsFile.Key);
-
+        const file = fs.createWriteStream(path.join(this.tempFolder, awsFile.Key));
+        winston.info(`Downloading ${awsFile.Key} from S3`);
         await new Promise((resolve, reject) => {
             this.s3Client.getObject(params).createReadStream()
                 .on("end", () => resolve())
