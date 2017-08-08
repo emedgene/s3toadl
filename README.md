@@ -15,13 +15,14 @@ In order to run the tool the following environment variables needs to be defined
 1. `docker build -t **image name** .`
 2. To run the docker file update the environment varaiables in the docker file, and then run:
 ```
-`docker run -v '/dir:/tempdir' **image name**`<br/>
+`docker run -v '/dir:/tempdir' **image name**`
 ```
-or add the enciorment varaiables as part of the docker run command:<br/>
+or add the enviorment varaiables as part of the docker run command:<br/>
 
 ```
 docker run -v '/dir:/tempdir' -e AWS_ACCESS_KEY_ID='access_Key_Id' -e AWS_SECRET_ACCESS_KEY='secret_access_key' -e AWS_REGION='region' -e AWS_BUCKET_NAME='bucket_name' -e AZURE_CLIENT_ID='azure_cliet_id' -e AZURE_DOMAIN='Azure_domain' -e AZURE_SECRET='azure_secret' -e AZURE_ADL_ACCOUNT_NAME='adl_accountName' -e TEMP_FOLDER='/tempdir' **image name**
-```</br>
+```
+
 The -v flag mounts the current working directory into the container. [Documentation](https://docs.docker.com/engine/reference/commandline/run/#mount-volume--v-read-only)
 3. Docker image is also available at Docker Hub - `docker pull catalystcode/s3toadl`
 
@@ -34,6 +35,5 @@ git clone https://github.com/CatalystCode/s3toadl.git
 npm install
 node lib/index.js
 ```
-
 
 At the end of the run log file will be written to TEMP_FOLDER.
