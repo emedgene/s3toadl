@@ -1,7 +1,7 @@
 # S3 to Azure Data Lake Store data copy
-Tool to move data from AWS S3 to Azure Data Lake Store.
-The tool will download the data from S3 to a local folder and then will upload it to Azure Data Lake.
-The tool supports incremental data copy. In case partial data already exist in ADL, the tool 
+A tool to move data from AWS S3 to Azure Data Lake Store.<br/>
+The tool will download the data from S3 to a local folder and then will upload it to Azure Data Lake.<br/>
+The tool supports incremental data copy. In case partial data already exist in ADL, the tool
 we'll copy only the missing data.
 
 In order to run the tool the following environment variables needs to be defined:
