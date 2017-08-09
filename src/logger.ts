@@ -8,6 +8,9 @@ export let winston = new Logger({
     new transports.Console(),
     new transports.File({
       filename: tempFolder + "/logfile.log",
+      level: "verbose",
+      colorize: true,
+      timestamp: true,
     }),
   ],
 });
@@ -15,6 +18,6 @@ export let winston = new Logger({
 winston.remove(transports.Console);
 winston.add(transports.Console, {
   timestamp: true,
-  level: "verbose",
+  level: "info",
   colorize: true,
 });

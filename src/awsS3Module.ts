@@ -21,7 +21,7 @@ export class AwsS3Module {
      */
     public async listAllObjects(marker?: string): Promise<AWS.S3.ListObjectsOutput> {
         return await new Promise<AWS.S3.ListObjectsOutput>((resolve, reject) => {
-            this.s3Client.listObjects({ Bucket: this.bucketName, Marker: marker }, (error, data) => {
+            this.s3Client.listObjects({ Bucket: this.bucketName, Marker: marker, MaxKeys: 1000 }, (error, data) => {
                 if (error) {
                     return reject(error);
                 }

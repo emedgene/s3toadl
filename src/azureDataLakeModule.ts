@@ -30,8 +30,12 @@ export class AzureDataLakeModule {
       return file.fileStatus.modificationTime < awsFile.LastModified.getTime();
     }
     catch (ex) {
-      winston.verbose(`file: ${fileFullName} doesn't exists in ADL`);
-      return true;
+      if (ex.body && ex.body && ex.body.remoteException && ex.body.remoteException.exception === "FileNotFoundException") {
+        winston.info(`file: ${fileFullName} doesn't exists in ADL`);
+        return true;
+      } else {
+        throw ex;
+      }
     }
   }
 
@@ -54,7 +58,7 @@ export class AzureDataLakeModule {
       };
 
       // Upload file to Azure Data Lake
-      await this.filesystemClient.fileSystem.create(this.accountName, filePath, options);
+      this.filesystemClient.fileSystem.create(this.accountName, filePath, options);
       winston.info(`Upload file ${filePath} successfully`);
     } catch (ex) {
       winston.error(`error while uploading file to ADL: ${ex}`);

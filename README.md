@@ -1,6 +1,6 @@
 # S3 to Azure Data Lake Store incremental data copy
 This tool is designed for incremental data copy from AWS S3 to Azure Data Lake Store.<br/>
-For initial data copy [Azure Data Factory](https://docs.microsoft.com/en-us/azure/data-factory/data-factory-introduction) is recomended.<br/>
+For initial data copy [Azure Data Factory](https://docs.microsoft.com/en-us/azure/data-factory/data-factory-introduction) is recommended.<br/>
 The tool will detect which files exist in S3 and are missing from ADL. <br/> 
 It will download them from S3 to a local folder and then upload them to Azure Data Lake.<br/>
 
@@ -13,11 +13,11 @@ In order to run the tool the following environment variables needs to be defined
 
 ## Run With Docker
 1. `docker build -t **image name** .`
-2. To run the docker file update the environment varaiables in the docker file, and then run:
+2. To run the docker file update the environment variables in the docker file, and then run:
 ```
 `docker run -v '/dir:/tempdir' **image name**`
 ```
-or add the enviorment varaiables as part of the docker run command:<br/>
+or add the environment variables as part of the docker run command:<br/>
 
 ```
 docker run -v '/dir:/tempdir' -e AWS_ACCESS_KEY_ID='access_Key_Id' -e AWS_SECRET_ACCESS_KEY='secret_access_key' -e AWS_REGION='region' -e AWS_BUCKET_NAME='bucket_name' -e AZURE_CLIENT_ID='azure_cliet_id' -e AZURE_DOMAIN='Azure_domain' -e AZURE_SECRET='azure_secret' -e AZURE_ADL_ACCOUNT_NAME='adl_accountName' -e TEMP_FOLDER='/tempdir' **image name**
@@ -28,12 +28,23 @@ The -v flag mounts the current working directory into the container. [Documentat
 
 ## Run Locally
 In order to run the tool locally node should be installed.
-1. Define the required enviorment variables.
-2. run the follwoing:
+1. Define the required environment variables.
+2. run the following:
 ```
 git clone https://github.com/CatalystCode/s3toadl.git
 npm install
 node lib/index.js
 ```
-
 At the end of the run log file will be written to TEMP_FOLDER.
+
+** Run Tests **<br/>
+```
+npm test
+```
+
+** Run E2E ** <br/>
+For sanity check, you can run an E2E test, which will upload one file to S3,
+run the tool, and will validate that the file was uploaded to Azure Data Lake.
+It is recommend to run this test on an empty S3 bucket - otherwise the test will upload <b>ALL</b> the files in the bucket to the data lake.
+
+

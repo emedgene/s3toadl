@@ -50,8 +50,15 @@ describe("shouldUploadToADL tests", () => {
     });
 
     it("shouldUploadToADL returns true when file does not exist in adl", async () => {
-        // given
-        const stub = sinon.stub(adlClient.fileSystem, "getFileStatus").throws(new Error("file doesn't exists in ADL"));
+        // given ex.body.remoteException.exception
+        let fileNotFoundException = {
+            body: {
+                remoteException: {
+                    exception: "FileNotFoundException",
+                },
+            },
+        };
+        const stub = sinon.stub(adlClient.fileSystem, "getFileStatus").throws(fileNotFoundException);
         adlModule = new AzureDataLakeModule("accountName", "folderName", adlClient);
 
         // Act

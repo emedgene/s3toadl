@@ -10,14 +10,16 @@ import { createDirIfNotExists, deleteFile, deleteFolder, getDirectoriesPathArray
 import { winston } from "./logger";
 
 export class S3ToAdlDataCopy {
+  public awsClient: AWS.S3;
+  public adlClient: adlsManagement.DataLakeStoreFileSystemClient;
+  public awsBucketName: string;
+  public azureAdlAccountName: string;
 
   private concurrencyNumber = process.env.CONCURRENCY_NUMBER || 10;
   private tempFolder: string;
   private awsAccessKeyId: string;
   private awsAccessSecretKey: string;
   private awsRegion: string;
-  private awsBucketName: string;
-  private azureAdlAccountName: string;
   private azureClientId: string;
   private azureDomain: string;
   private azureSecret: string;
@@ -34,6 +36,10 @@ export class S3ToAdlDataCopy {
     this.azureClientId = process.env.AZURE_CLIENT_ID;
     this.azureDomain = process.env.AZURE_DOMAIN;
     this.azureSecret = process.env.AZURE_SECRET;
+
+    // Initialize clients
+    this.awsClient = this.initializeAwsClient(this.awsAccessKeyId, this.awsAccessSecretKey, this.awsRegion);
+    this.adlClient = this.initializeAdlClient(this.azureClientId, this.azureDomain, this.azureSecret);
   }
 
   public async handler() {
@@ -43,11 +49,8 @@ export class S3ToAdlDataCopy {
     this.tempFolder += "/cache";
     createDirIfNotExists(null, null, this.tempFolder);
 
-    const awsClient = this.initializeAwsClient(this.awsAccessKeyId, this.awsAccessSecretKey, this.awsRegion);
-    const awsModule = new AwsS3Module(this.awsBucketName, this.tempFolder, awsClient);
-
-    const adlClient = this.initializeAdlClient(this.azureClientId, this.azureDomain, this.azureSecret);
-    const adlModule = new AzureDataLakeModule(this.azureAdlAccountName, this.tempFolder, adlClient);
+    const awsModule = new AwsS3Module(this.awsBucketName, this.tempFolder, this.awsClient);
+    const adlModule = new AzureDataLakeModule(this.azureAdlAccountName, this.tempFolder, this.adlClient);
 
     await this.batchIterationOverS3Items(awsModule, adlModule);
 
@@ -65,13 +68,13 @@ export class S3ToAdlDataCopy {
     let marker = "";
     let batchNumber = 1;
     do {
-      winston.info(`Starting batch #${batchNumber}`);
+      winston.info(`Processing batch #${batchNumber}`);
       awsObjectsOutput = await awsS3Module.listAllObjects(marker);
 
       if (awsObjectsOutput && awsObjectsOutput.Contents && awsObjectsOutput.Contents.length > 0) {
         let awsObjects = awsObjectsOutput.Contents;
         // Filter out the directories names - aws.listObjects returns all files in the bucket including directories names
-        awsObjects = awsObjects.filter((obj) => !obj.Key.endsWith("/") && obj.Key.includes("/"));
+        awsObjects = awsObjects.filter((obj) => !obj.Key.endsWith("/"));
 
         const promiseArray = awsObjects.map(key => {
           return async () => {
@@ -89,7 +92,12 @@ export class S3ToAdlDataCopy {
           };
         });
 
-        await parallel(promiseArray, this.concurrencyNumber);
+        try {
+          await parallel(promiseArray, this.concurrencyNumber);
+        } catch (ex) {
+          winston.error(ex);
+        }
+
         marker = awsObjects[awsObjects.length - 1].Key;
         batchNumber++;
       }

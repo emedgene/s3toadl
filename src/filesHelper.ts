@@ -20,7 +20,7 @@ export function createDirIfNotExists(filePath?: string, dirName?: string, fullFi
     const fullPath = fullFilePath || path.join(filePath, dirName);
 
     if (!fs.existsSync(fullPath)) {
-        winston.info(`Creating directory ${fullPath}`);
+        winston.verbose(`Creating directory ${fullPath}`);
         fs.mkdirSync(fullPath);
     }
 }
@@ -28,7 +28,7 @@ export function createDirIfNotExists(filePath?: string, dirName?: string, fullFi
 export function deleteFile(filePath: string) {
     // Delete local file
     fs.unlinkSync(filePath);
-    winston.info(`file ${filePath} was deleted from local folder`);
+    winston.verbose(`file ${filePath} was deleted from local folder`);
 }
 
 export function deleteFolder(path: string) {
