@@ -16,6 +16,8 @@
     "gulp-typescript": "^3.2.1",
     "mock-aws-s3": "^2.5.1",
     "path": "^0.12.7",
+    "performance-now": "^2.1.0",
+    "redis": "^2.8.0",
     "rimraf": "^2.6.1",
     "sinon": "^3.0.0",
     "tslint": "^5.5.0",
