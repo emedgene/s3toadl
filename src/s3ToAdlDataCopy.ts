@@ -25,6 +25,8 @@ export class S3ToAdlDataCopy {
   private azureDomain: string;
   private azureSecret: string;
   private useRedis: boolean;
+  private redisPort: string;
+  private redisHost: string;
 
   constructor() {
     this.validateEnvironmentVariables();
@@ -39,6 +41,8 @@ export class S3ToAdlDataCopy {
     this.azureDomain = process.env.AZURE_DOMAIN;
     this.azureSecret = process.env.AZURE_SECRET;
     this.useRedis = process.env.USE_REDIS !== undefined ? process.env["USE_REDIS"].toLowerCase() === "true" : false;
+    this.redisPort = process.env.REDIS_PORT || "6379";
+    this.redisHost = process.env.REDIS_HOST ||  "redis";
 
     // Initialize clients
     this.awsClient = this.initializeAwsClient(this.awsAccessKeyId, this.awsAccessSecretKey, this.awsRegion);
@@ -54,7 +58,8 @@ export class S3ToAdlDataCopy {
 
     const awsModule = new AwsS3Module(this.awsBucketName, this.tempFolder, this.awsClient);
     const adlModule = new AzureDataLakeModule(this.azureAdlAccountName, this.tempFolder, this.adlClient);
-    const redisModule = this.useRedis ? new RedisModule() : null;
+    
+    const redisModule = this.useRedis ? new RedisModule(this.redisPort, this.redisHost) : null;
 
     if (this.useRedis) {
       winston.info("Using Redis");
