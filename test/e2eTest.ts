@@ -20,12 +20,13 @@ async function E2EFlow() {
                 console.log("Uploaded file to s3 successfully");
                 resolve();
             }
-
         });
     });
 
     // Run flow to upload file to ADL
-    await s3ToAdlDataCopy.handler();
+    await s3ToAdlDataCopy.handler(() => {
+        console.log("completed");
+    });
 
     // Verify the file exists in ADL and have the right content
     try {

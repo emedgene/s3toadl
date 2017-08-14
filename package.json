@@ -5,10 +5,11 @@
   "main": "index.js",
   "typings": "src/index",
   "dependencies": {
-    "async": "^2.5.0",
     "async-await-parallel": "^1.0.0",
     "aws-sdk": "^2.88.0",
     "azure-arm-datalake-store": "^2.1.0-preview",
+    "express": "^4.15.4",
+    "express-generator": "^4.15.0",
     "fs": "^0.0.1-security",
     "gulp": "^3.9.1",
     "gulp-sourcemaps": "^2.6.0",
@@ -20,7 +21,9 @@
     "redis": "^2.8.0",
     "rimraf": "^2.6.1",
     "sinon": "^3.0.0",
+    "socket.io": "^2.0.3",
     "tslint": "^5.5.0",
+    "watchjs": "0.0.0",
     "winston": "^2.3.1"
   },
   "devDependencies": {

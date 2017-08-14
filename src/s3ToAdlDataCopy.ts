@@ -15,6 +15,7 @@ export class S3ToAdlDataCopy {
   public adlClient: adlsManagement.DataLakeStoreFileSystemClient;
   public awsBucketName: string;
   public azureAdlAccountName: string;
+  public copyProperties: { batchNumber: number, uploadedCount: 0 } = { batchNumber: 0, uploadedCount: 0 };
 
   private concurrencyNumber = process.env.CONCURRENCY_NUMBER || 10;
   private tempFolder: string;
@@ -42,14 +43,14 @@ export class S3ToAdlDataCopy {
     this.azureSecret = process.env.AZURE_SECRET;
     this.useRedis = process.env.USE_REDIS !== undefined ? process.env["USE_REDIS"].toLowerCase() === "true" : false;
     this.redisPort = process.env.REDIS_PORT || "6379";
-    this.redisHost = process.env.REDIS_HOST ||  "redis";
+    this.redisHost = process.env.REDIS_HOST || "redis";
 
     // Initialize clients
     this.awsClient = this.initializeAwsClient(this.awsAccessKeyId, this.awsAccessSecretKey, this.awsRegion);
     this.adlClient = this.initializeAdlClient(this.azureClientId, this.azureDomain, this.azureSecret);
   }
 
-  public async handler() {
+  public async handler(cb) {
     // create temp directory with cache directory inside to download files from s3 and upload it to ADL.
     // In the end of the run the cache directory will be deleted.
     createDirIfNotExists(null, null, this.tempFolder);
@@ -58,7 +59,6 @@ export class S3ToAdlDataCopy {
 
     const awsModule = new AwsS3Module(this.awsBucketName, this.tempFolder, this.awsClient);
     const adlModule = new AzureDataLakeModule(this.azureAdlAccountName, this.tempFolder, this.adlClient);
-    
     const redisModule = this.useRedis ? new RedisModule(this.redisPort, this.redisHost) : null;
 
     if (this.useRedis) {
@@ -72,6 +72,7 @@ export class S3ToAdlDataCopy {
     // After all uploads are completed, delete the cache directory and its sub directories.
     deleteFolder(this.tempFolder);
     winston.info("all done");
+    cb();
   }
 
   /**
@@ -81,9 +82,10 @@ export class S3ToAdlDataCopy {
   public async batchIterationOverS3Items(awsS3Module: AwsS3Module, adlModule: AzureDataLakeModule, redisModule: RedisModule): Promise<void> {
     let awsObjectsOutput: AWS.S3.ListObjectsOutput;
     let marker = "";
-    let batchNumber = 1;
+    this.copyProperties.batchNumber = 1;
+
     do {
-      winston.info(`Processing batch #${batchNumber}`);
+      winston.info(`Processing batch #${this.copyProperties.batchNumber}`);
       awsObjectsOutput = await awsS3Module.listAllObjects(marker);
 
       if (awsObjectsOutput && awsObjectsOutput.Contents && awsObjectsOutput.Contents.length > 0) {
@@ -98,6 +100,7 @@ export class S3ToAdlDataCopy {
                 await awsS3Module.downloadFileFromS3(key);
                 // Upload File if it doesn't exist in ADL or if a new version of the file exists in S3
                 await adlModule.uploadFileToAzureDataLake(key.Key);
+                this.copyProperties.uploadedCount++;
                 await deleteFile(path.join(this.tempFolder, key.Key));
                 // Update redis with the new file
                 if (this.useRedis) {
@@ -118,7 +121,7 @@ export class S3ToAdlDataCopy {
         }
 
         marker = awsObjects[awsObjects.length - 1].Key;
-        batchNumber++;
+        this.copyProperties.batchNumber++;
       }
     } while (awsObjectsOutput.IsTruncated);
   }
