@@ -44,7 +44,6 @@ export class S3ToAdlDataCopy {
     this.useRedis = process.env.USE_REDIS !== undefined ? process.env["USE_REDIS"].toLowerCase() === "true" : false;
     this.redisPort = process.env.REDIS_PORT || "6379";
     this.redisHost = process.env.REDIS_HOST || "redis";
-
     // Initialize clients
     this.awsClient = this.initializeAwsClient(this.awsAccessKeyId, this.awsAccessSecretKey, this.awsRegion);
     this.adlClient = this.initializeAdlClient(this.azureClientId, this.azureDomain, this.azureSecret);
