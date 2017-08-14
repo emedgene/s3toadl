@@ -2,18 +2,26 @@
 This tool is designed for incremental data copy from AWS S3 to Azure Data Lake Store.<br/>
 For initial data copy [Azure Data Factory](https://docs.microsoft.com/en-us/azure/data-factory/data-factory-introduction) is recommended.<br/>
 The tool will detect which files exist in S3 and are missing from ADL. <br/> 
-It will download them from S3 to a local folder and then upload them to Azure Data Lake.<br/>
+It will download them from S3 to a local folder and then upload them to Azure Data Lake.<br/><br/>
+When running the tool often, it is recommended to add integration with Redis for persistency.<br
+The redis will hold the metadata of the files that were copied from S3 to ADL.
 
 In order to run the tool the following environment variables needs to be defined:
 
 * AWS configuration: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, AWS_BUCKET_NAME
 * Azure Configuration: AZURE_CLIENT_ID, AZURE_DOMAIN, AZURE_SECRET, AZURE_ADL_ACCOUNT_NAME
 * Local folder for temporary download the files: TEMP_FOLDER
+* Optional Parameters for running with Redis: USE_REDIS - should be set to "true" to integrate with Redis. </br>
+REDIS_PORT - default is 6379, REDIS_HOST- default is "redis".
 
 
 ## Run With Docker
-1. `docker build -t **image name** .`
-2. To run the docker file update the environment variables in the docker file, and then run:
+1. If running with Redis, run: 
+```
+docker run --name *redisName* -d -v /dir:/data  redis --appendonly yes 
+```
+2. `docker build -t **image name** .`
+3. To run the docker file update the environment variables in the docker file, and then run:
 ```
 `docker run -v '/dir:/tempdir' **image name**`
 ```
@@ -23,8 +31,9 @@ In order to run the tool the following environment variables needs to be defined
 docker run -v '/dir:/tempdir' -e AWS_ACCESS_KEY_ID='access_Key_Id' -e AWS_SECRET_ACCESS_KEY='secret_access_key' -e AWS_REGION='region' -e AWS_BUCKET_NAME='bucket_name' -e AZURE_CLIENT_ID='azure_cliet_id' -e AZURE_DOMAIN='Azure_domain' -e AZURE_SECRET='azure_secret' -e AZURE_ADL_ACCOUNT_NAME='adl_accountName' -e TEMP_FOLDER='/tempdir' **image name**
 ```
 
+If running with Redis add : --link *redisName*:redis to the run command.
 The -v flag mounts the current working directory into the container. [Documentation](https://docs.docker.com/engine/reference/commandline/run/#mount-volume--v-read-only)<br/>
-3. Docker image is also available at Docker Hub - `docker pull catalystcode/s3toadl`<br/>
+4. Docker image is also available at Docker Hub - `docker pull catalystcode/s3toadl`<br/>
 At the end of the run log file will be written to TEMP_FOLDER.
 
 ## Run Locally
@@ -51,5 +60,5 @@ It is recommend to run this test on an empty S3 bucket - otherwise the test will
 node lib/test/e2eTest.js
 ```
 
-# Lisence
+# Licence
 MIT
