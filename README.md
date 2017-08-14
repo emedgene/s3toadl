@@ -3,7 +3,7 @@ This tool is designed for incremental data copy from AWS S3 to Azure Data Lake S
 For initial data copy [Azure Data Factory](https://docs.microsoft.com/en-us/azure/data-factory/data-factory-introduction) is recommended.<br/>
 The tool will detect which files exist in S3 and are missing from ADL. <br/> 
 It will download them from S3 to a local folder and then upload them to Azure Data Lake.<br/><br/>
-When running the tool often, it is recommended to add integration with Redis for persistency.<br
+When running the tool often, it is recommended to add integration with Redis for persistency.<br/>
 The redis will hold the metadata of the files that were copied from S3 to ADL.
 
 In order to run the tool the following environment variables needs to be defined:
