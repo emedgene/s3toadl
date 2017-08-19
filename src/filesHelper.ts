@@ -27,14 +27,23 @@ export function createDirIfNotExists(filePath?: string, dirName?: string, fullFi
 
 export function deleteFile(filePath: string) {
     // Delete local file
-    fs.unlinkSync(filePath);
-    winston.verbose(`file ${filePath} was deleted from local folder`);
+    try {
+        fs.unlinkSync(filePath);
+        winston.verbose(`file ${filePath} was deleted from local folder`);
+    } catch (ex) {
+        winston.error(`Error deleting file ${filePath}`);
+    }
+
 }
 
-export function deleteFolder(path: string) {
-    rimraf(path, (err) => {
-        if (err) {
-            winston.error(`Error deleting directories ${err}`);
-        }
+export async function deleteFolder(path: string): Promise<void> {
+    return await new Promise<void>((resolve, reject) => {
+        rimraf(path, (err) => {
+            if (err) {
+                winston.error(`Error deleting directories ${err}`);
+                reject(err);
+            }
+            resolve();
+        });
     });
 }

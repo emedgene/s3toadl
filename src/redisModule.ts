@@ -7,8 +7,8 @@ export class RedisModule {
 
     private redisClient;
 
-    constructor(port: string, host: string) {
-        this.redisClient = redis.createClient(port, host);
+    constructor(redisClient: redis.client) {
+        this.redisClient = redisClient;
     }
 
     public async isFileInRedis(awsFile: AWS.S3.Object): Promise<RedisObject> {

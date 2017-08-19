@@ -4,6 +4,7 @@ import * as AWS from "aws-sdk";
 import * as adlsManagement from "azure-arm-datalake-store";
 import * as msrestAzure from "ms-rest-azure";
 import * as path from "path";
+import * as redis from "redis";
 import { AwsS3Module } from "./awsS3Module";
 import { AzureDataLakeModule } from "./azureDataLakeModule";
 import { createDirIfNotExists, deleteFile, deleteFolder, getDirectoriesPathArray } from "./filesHelper";
@@ -58,7 +59,7 @@ export class S3ToAdlDataCopy {
 
     const awsModule = new AwsS3Module(this.awsBucketName, this.tempFolder, this.awsClient);
     const adlModule = new AzureDataLakeModule(this.azureAdlAccountName, this.tempFolder, this.adlClient);
-    const redisModule = this.useRedis ? new RedisModule(this.redisPort, this.redisHost) : null;
+    const redisModule = this.useRedis ? new RedisModule(this.initializeRedisClient(this.redisPort, this.redisHost)) : null;
 
     if (this.useRedis) {
       winston.info("Using Redis");
@@ -69,7 +70,7 @@ export class S3ToAdlDataCopy {
     await this.batchIterationOverS3Items(awsModule, adlModule, redisModule);
 
     // After all uploads are completed, delete the cache directory and its sub directories.
-    deleteFolder(this.tempFolder);
+    await deleteFolder(this.tempFolder);
     winston.info("all done");
     cb();
   }
@@ -100,7 +101,7 @@ export class S3ToAdlDataCopy {
                 // Upload File if it doesn't exist in ADL or if a new version of the file exists in S3
                 await adlModule.uploadFileToAzureDataLake(key.Key);
                 this.copyProperties.uploadedCount++;
-                await deleteFile(path.join(this.tempFolder, key.Key));
+                deleteFile(path.join(this.tempFolder, key.Key));
                 // Update redis with the new file
                 if (this.useRedis) {
                   await redisModule.addFileToRedis(key);
@@ -108,7 +109,6 @@ export class S3ToAdlDataCopy {
               }
             } catch (ex) {
               winston.error(`error was thrown while working on element ${key.Key} ${ex}`);
-              return null;
             }
           };
         });
@@ -125,7 +125,7 @@ export class S3ToAdlDataCopy {
     } while (awsObjectsOutput.IsTruncated);
   }
 
-  private async shouldUploadFile(redisModule: RedisModule, adlModule: AzureDataLakeModule, key: AWS.S3.Object) {
+  public async shouldUploadFile(redisModule: RedisModule, adlModule: AzureDataLakeModule, key: AWS.S3.Object) {
     let shouldUploadFile: boolean;
 
     if (this.useRedis) {
@@ -133,7 +133,10 @@ export class S3ToAdlDataCopy {
       if (obj === null) {
         // Object is not in redis - check in ADL if it should be upload and update redis anyway
         shouldUploadFile = await adlModule.shouldUploadToADL(key);
-        await redisModule.addFileToRedis(key);
+        // if file already exists in ADL, just update redis.
+        if (!shouldUploadFile) {
+          await redisModule.addFileToRedis(key);
+        }
       } else {
         // Check if file was modified since the last time it was uploaded
         shouldUploadFile = obj.ETag !== key.ETag;
@@ -179,6 +182,15 @@ export class S3ToAdlDataCopy {
       return new adlsManagement.DataLakeStoreFileSystemClient(credentials);
     } catch (ex) {
       winston.error(`error initializing Azure client ${ex}`);
+      throw ex;
+    }
+  }
+
+    private initializeRedisClient(port: string, host: string): redis.client {
+    try {
+      return redis.createClient(port, host);
+    } catch (ex) {
+      winston.error(`error initializing redis client ${ex}`);
       throw ex;
     }
   }

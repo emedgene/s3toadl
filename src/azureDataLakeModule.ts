@@ -58,7 +58,7 @@ export class AzureDataLakeModule {
       };
 
       // Upload file to Azure Data Lake
-      this.filesystemClient.fileSystem.create(this.accountName, filePath, options);
+      await this.filesystemClient.fileSystem.create(this.accountName, filePath, options);
       winston.info(`Upload file ${filePath} successfully`);
     } catch (ex) {
       winston.error(`error while uploading file to ADL: ${ex}`);
