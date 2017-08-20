@@ -16,6 +16,7 @@ export class AzureDataLakeModule {
     this.accountName = accountName;
     this.tempFolder = tempFolder;
     this.filesystemClient = fileSystemClient;
+    this.bucketName = bucketName;
   }
 
   /**
