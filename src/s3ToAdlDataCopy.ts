@@ -59,7 +59,7 @@ export class S3ToAdlDataCopy {
 
     const awsModule = new AwsS3Module(this.awsBucketName, this.tempFolder, this.awsClient);
     const adlModule = new AzureDataLakeModule(this.azureAdlAccountName, this.tempFolder, this.adlClient, this.awsBucketName);
-    const redisModule = this.useRedis ? new RedisModule(this.initializeRedisClient(this.redisPort, this.redisHost)) : null;
+    const redisModule = this.useRedis ? new RedisModule(this.initializeRedisClient(this.redisPort, this.redisHost), this.awsBucketName) : null;
 
     if (this.useRedis) {
       winston.info("Using Redis");
@@ -127,7 +127,7 @@ export class S3ToAdlDataCopy {
 
   public async shouldUploadFile(redisModule: RedisModule, adlModule: AzureDataLakeModule, key: AWS.S3.Object) {
     let shouldUploadFile: boolean;
-
+    
     if (this.useRedis) {
       let obj: RedisObject = await redisModule.isFileInRedis(key);
       if (obj === null) {

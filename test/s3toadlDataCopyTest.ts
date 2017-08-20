@@ -149,7 +149,7 @@ describe("aws s3 tests", () => {
         process.env["USE_REDIS"] = "true";
         const redisObj = new RedisObject();
         redisObj.ETag = expectedElement1.ETag;
-        redisModule = new RedisModule(null);
+        redisModule = new RedisModule(null, "bucket");
         const shouldUploadStub = sinon.stub(redisModule, "isFileInRedis").returns(new Promise<RedisObject>((resolve) => {
             resolve(redisObj);
         }));
@@ -169,7 +169,7 @@ describe("aws s3 tests", () => {
         process.env["USE_REDIS"] = "true";
         const redisObj = new RedisObject();
         redisObj.ETag = "6543321";
-        redisModule = new RedisModule(null);
+        redisModule = new RedisModule(null, "bucket");
         const shouldUploadStub = sinon.stub(redisModule, "isFileInRedis").returns(new Promise<RedisObject>((resolve) => {
             resolve(redisObj);
         }));
@@ -187,7 +187,7 @@ describe("aws s3 tests", () => {
     it("shouldUploadFile return true and not update redis when redis is empty and file exist on ADL", async () => {
         // given
         process.env["USE_REDIS"] = "true";
-        redisModule = new RedisModule(null);
+        redisModule = new RedisModule(null, "bucket");
         const isFileInRedisStub = sinon.stub(redisModule, "isFileInRedis").returns(new Promise<RedisObject>((resolve) => {
             resolve(null);
         }));
@@ -212,7 +212,7 @@ describe("aws s3 tests", () => {
     it("shouldUploadFile return true and update redis when redis is empty and file exist on ADL", async () => {
         // given
         process.env["USE_REDIS"] = "true";
-        redisModule = new RedisModule(null);
+        redisModule = new RedisModule(null, "bucket");
         const isFileInRedisStub = sinon.stub(redisModule, "isFileInRedis").returns(new Promise<RedisObject>((resolve) => {
             resolve(null);
         }));

@@ -6,20 +6,23 @@ import { winston } from "./logger";
 export class RedisModule {
 
     private redisClient;
+    private bucketName: string;
 
-    constructor(redisClient: redis.client) {
+    constructor(redisClient: redis.client, bucketName: string) {
         this.redisClient = redisClient;
+        this.bucketName = bucketName;
     }
 
     public async isFileInRedis(awsFile: AWS.S3.Object): Promise<RedisObject> {
         return await new Promise<RedisObject>((resolve, reject) => {
-            this.redisClient.get(awsFile.Key, function (err, value) {
+            const fileName = this.bucketName + "/" + awsFile.Key;
+            this.redisClient.get(fileName, function (err, value) {
                 if (value === null) {
-                    winston.verbose(`file ${awsFile.Key} not found in redis`);
+                    winston.verbose(`file ${fileName} not found in redis`);
                     resolve(null);
                 }
                 if (value) {
-                    winston.verbose(`file ${awsFile.Key} was found in redis`);
+                    winston.verbose(`file ${fileName} was found in redis`);
                     resolve(JSON.parse(value));
                 }
                 if (err) {
@@ -40,13 +43,13 @@ export class RedisModule {
 
             };
             const stringifyElement = JSON.stringify(elementToUpload);
-
-            this.redisClient.set(awsFile.Key, stringifyElement, (err) => {
+            const fileName = this.bucketName + "/" + awsFile.Key;
+            this.redisClient.set(fileName, stringifyElement, (err) => {
                 if (err) {
                     reject(err);
                 }
 
-                winston.verbose(`Added file ${awsFile.Key} successfully to redis`);
+                winston.verbose(`Added file ${fileName} successfully to redis`);
                 resolve();
             });
         });
