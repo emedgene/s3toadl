@@ -43,7 +43,7 @@ describe("aws s3 tests", () => {
         const bucketName = "bucket";
         const tempFolder = "tempFolder";
         awsS3Module = new AwsS3Module(bucketName, tempFolder, new AWS.S3());
-        adlModule = new AzureDataLakeModule("accountName", "folderName", null);
+        adlModule = new AzureDataLakeModule("accountName", "folderName", null, "bucket");
     });
 
     it("When required environment variables are missing exception is thrown", () => {

@@ -23,7 +23,7 @@ describe("shouldUploadToADL tests", () => {
             },
         };
         const stub = sinon.stub(adlClient.fileSystem, "getFileStatus").returns(expectedResult);
-        adlModule = new AzureDataLakeModule("accountName", "folderName", adlClient);
+        adlModule = new AzureDataLakeModule("accountName", "folderName", adlClient, "bucket");
 
         // Act
         const result = await adlModule.shouldUploadToADL({ LastModified: new Date(), Key: "key" });
@@ -40,7 +40,7 @@ describe("shouldUploadToADL tests", () => {
             },
         };
         const stub = sinon.stub(adlClient.fileSystem, "getFileStatus").returns(expectedResult);
-        adlModule = new AzureDataLakeModule("accountName", "folderName", adlClient);
+        adlModule = new AzureDataLakeModule("accountName", "folderName", adlClient, "bucket");
 
         // Act
         const result = await adlModule.shouldUploadToADL({ LastModified: new Date(2016, 1, 1), Key: "key" });
@@ -59,7 +59,7 @@ describe("shouldUploadToADL tests", () => {
             },
         };
         const stub = sinon.stub(adlClient.fileSystem, "getFileStatus").throws(fileNotFoundException);
-        adlModule = new AzureDataLakeModule("accountName", "folderName", adlClient);
+        adlModule = new AzureDataLakeModule("accountName", "folderName", adlClient, "bucket");
 
         // Act
         const result = await adlModule.shouldUploadToADL({ LastModified: new Date(), Key: "key" });

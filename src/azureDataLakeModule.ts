@@ -9,8 +9,10 @@ export class AzureDataLakeModule {
   private filesystemClient: adlsManagement.DataLakeStoreFileSystemClient;
   private accountName: string;
   private tempFolder: string;
+  private bucketName: string;
 
-  constructor(accountName: string, tempFolder: string, fileSystemClient: adlsManagement.DataLakeStoreFileSystemClient) {
+  constructor(accountName: string, tempFolder: string, fileSystemClient: adlsManagement.DataLakeStoreFileSystemClient,
+    bucketName: string) {
     this.accountName = accountName;
     this.tempFolder = tempFolder;
     this.filesystemClient = fileSystemClient;
@@ -21,7 +23,7 @@ export class AzureDataLakeModule {
    * @param awsFile - the file to validate
    */
   public async shouldUploadToADL(awsFile: AWS.S3.Object): Promise<boolean> {
-    const fileFullName = awsFile.Key;
+    const fileFullName = this.bucketName + "/" + awsFile.Key;
     try {
       const file = await this.filesystemClient.fileSystem.getFileStatus(this.accountName, fileFullName);
       winston.verbose(`file: ${fileFullName} already exists in data lake`);
@@ -46,7 +48,8 @@ export class AzureDataLakeModule {
    * @param filePath - the path where the file to upload is located
    */
   public async uploadFileToAzureDataLake(filePath: string): Promise<void> {
-    const directoriesList = filesHelper.getDirectoriesPathArray(filePath);
+    const filePathToUpload = this.bucketName + "/" + filePath;
+    const directoriesList = filesHelper.getDirectoriesPathArray(filePathToUpload);
     const localFilePath = path.join(this.tempFolder, filePath);
 
     try {
@@ -59,8 +62,9 @@ export class AzureDataLakeModule {
       };
 
       // Upload file to Azure Data Lake
-      await this.filesystemClient.fileSystem.create(this.accountName, filePath, options);
-      winston.info(`Upload file ${filePath} successfully`);
+      
+      await this.filesystemClient.fileSystem.create(this.accountName, filePathToUpload, options);
+      winston.info(`Upload file ${filePathToUpload} successfully`);
     } catch (ex) {
       winston.error(`error while uploading file to ADL: ${ex}`);
       throw ex;

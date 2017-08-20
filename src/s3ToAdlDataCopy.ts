@@ -58,7 +58,7 @@ export class S3ToAdlDataCopy {
     createDirIfNotExists(null, null, this.tempFolder);
 
     const awsModule = new AwsS3Module(this.awsBucketName, this.tempFolder, this.awsClient);
-    const adlModule = new AzureDataLakeModule(this.azureAdlAccountName, this.tempFolder, this.adlClient);
+    const adlModule = new AzureDataLakeModule(this.azureAdlAccountName, this.tempFolder, this.adlClient, this.awsBucketName);
     const redisModule = this.useRedis ? new RedisModule(this.initializeRedisClient(this.redisPort, this.redisHost)) : null;
 
     if (this.useRedis) {
