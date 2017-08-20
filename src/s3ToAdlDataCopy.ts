@@ -70,7 +70,7 @@ export class S3ToAdlDataCopy {
     await this.batchIterationOverS3Items(awsModule, adlModule, redisModule);
 
     // After all uploads are completed, delete the cache directory and its sub directories.
-    await deleteFolder(this.tempFolder);
+    // await deleteFolder(this.tempFolder);
     winston.info("all done");
     cb();
   }
