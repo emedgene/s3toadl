@@ -34,6 +34,7 @@ export class AzureDataLakeModule {
         winston.info(`file: ${fileFullName} doesn't exists in ADL`);
         return true;
       } else {
+        winston.error(`shouldUploadToADL unknown error: ${ex}`);
         throw ex;
       }
     }
