@@ -24,7 +24,7 @@
     "socket.io": "^2.0.3",
     "tslint": "^5.5.0",
     "watchjs": "0.0.0",
-    "winston": "^2.3.1"
+    "winston": "^2.4.5"
   },
   "devDependencies": {
     "@types/chai": "^4.0.2",
