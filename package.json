@@ -6,7 +6,7 @@
   "typings": "src/index",
   "dependencies": {
     "async-await-parallel": "^1.0.0",
-    "aws-sdk": "^2.88.0",
+    "aws-sdk": "^2.923.0",
     "azure-arm-datalake-store": "^2.1.0-preview",
     "express": "^4.15.4",
     "express-generator": "^4.15.0",
